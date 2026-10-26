@@ -89,9 +89,9 @@ IKEA 리뷰를 참고한 v2 설계이며, 아래 항목은 IKEA에 없는 기능
 | 현행 앱 | [IKEA](https://play.google.com/store/apps/details?id=com.ingka.ikea.app&hl=ko) — 리뷰 및 UI 참고 대상 |
 | v2 한 문장 | 자취방 수납용품의 가격·치수·용도를 같은 순서로 살펴보는 UI |
 | 작성자 | L.J.L. · 1인 1팀 |
-| 데모 | [전체 데모 약 46초](docs/영상/demo.mov) · [조회 오류와 재시도 약 20초](docs/영상/p09.mov) |
+| 데모 | [전체 데모 60초](docs/영상/demo.mp4) · [오류·복구 클립 10초](docs/영상/p09.mp4) |
 | AI 사용 | 규칙 `AGENTS.md` · 기록 `docs/prompt-log.md` · 셀프 논증 `docs/셀프논증.md` |
-| GitHub 제출 | [공개 저장소](https://github.com/jialin0717/jachwifit-midterm) · 새 clone 실행 확인과 LMS 제출은 아직 미완료 |
+| GitHub 제출 | [공개 저장소](https://github.com/jialin0717/jachwifit-midterm) · 새 clone에서 주요 화면·테스트·오류 복구 확인 · LMS 미제출 |
 
 이 저장소는 **중간프로젝트용 UI 구현**이다. JSON GET 조회와 화면 전환은 동작하지만 로그인·결제·영구 저장은 구현하지 않는다. 관심 상품 체험 버튼은 저장하지 않는다는 SnackBar만 표시한다. 검색·필터·공간 검증도 구현하지 않는다.
 
@@ -139,7 +139,7 @@ flutter run -d chrome
 
 `flutter` 명령을 찾지 못하면 설치한 Flutter SDK의 `bin/flutter` 실행 파일 경로를 확인한다. 해당 절대 경로로 `pub get`과 `run -d chrome`을 실행할 수 있다. 다른 사람의 설치 경로를 그대로 복사하지 않는다.
 
-시연 당시 앱 주소는 `http://localhost:49953`이었다. Flutter 웹 포트는 실행할 때 달라질 수 있으므로 터미널에 표시된 주소를 따른다. 목업 서버 포트는 **3000**이다.
+Flutter 웹 포트는 실행할 때 달라질 수 있으므로 터미널에 표시된 주소를 따른다. 목업 서버 포트는 **3000**이다.
 
 ### 실행 환경과 이미지 주소
 
@@ -158,7 +158,7 @@ Android 에뮬레이터에서 API 주소를 `10.0.2.2`로 바꾸더라도 이미
 
 ### 상태 화면 확인용 옵션
 
-템플릿의 `DEMO_STATE` 옵션으로 로딩·오류·빈 상태를 따로 확인할 수 있다. 실행 중인 Flutter 앱을 종료한 뒤 필요한 명령 하나를 실행한다.
+공개 저장소의 `lib/api.dart`에서 `String.fromEnvironment('DEMO_STATE')`와 상태별 분기를 확인했다. `loading` 또는 `slow`는 조회 전에 3초를 기다린 뒤 실제 GET을 진행하므로 로딩 화면이 계속 유지되는 옵션이 아니다. `error`는 예외를 발생시키고, `empty`는 빈 목록을 반환한다. 실행 중인 Flutter 앱을 종료한 뒤 필요한 명령 하나를 실행한다.
 
 ```bash
 flutter run -d chrome --dart-define=DEMO_STATE=loading
@@ -166,7 +166,13 @@ flutter run -d chrome --dart-define=DEMO_STATE=error
 flutter run -d chrome --dart-define=DEMO_STATE=empty
 ```
 
-이 옵션으로 모든 상태를 확인했다는 뜻은 아니다. 제출 전 현재 코드에서 각각 점검한다.
+2026-10-26에 `loading` 옵션의 로딩 화면과 `empty` 옵션의 빈 목록 화면을 캡처로 확인했다. 로딩은 3초 지연 뒤 실제 GET을 진행하며, 빈 목록은 옵션으로 강제한 결과이지 실제 상품 데이터를 삭제한 결과가 아니다. 오류 화면은 별도 clone에서 실제 서버 연결 실패로 확인했다. 
+
+| 상태 | 확인 화면 |
+|---|---|
+| 로딩 | ![3초 지연 중 로딩 화면](docs/screenshots/06_loading.png) |
+| 오류 | ![실제 서버 연결 실패 안내와 다시 시도](docs/screenshots/07_error.png) |
+| 빈 목록 | ![DEMO_STATE empty로 표시한 빈 목록](docs/screenshots/08_empty.png) |
 
 ## 2. 구조
 
@@ -184,7 +190,7 @@ flutter run -d chrome --dart-define=DEMO_STATE=empty
 | [원칙 카드](docs/원칙카드.md) | P01–P10 적용과 시연 근거 |
 | [prompt-log](docs/prompt-log.md) | AI 사용 기록 |
 | [셀프 논증](docs/셀프논증.md) | 기획과 구현의 차이 및 근거 |
-| [자가평가](docs/자가평가.md) | 파일 존재 · 최종 작성·확인 미완료, 나머지 작업 후 마지막에 작성 |
+| [자가평가](docs/자가평가.md) | 파일 존재 · 최종 작성·확인 미완료, 프로젝트 확인과 PPT 작성 후 작성 |
 
 ```text
 저장소 루트/
@@ -219,16 +225,21 @@ flutter run -d chrome --dart-define=DEMO_STATE=empty
     ├── 원칙카드.md
     ├── prompt-log.md
     ├── 셀프논증.md
-    ├── 자가평가.md               # 파일 존재·미완료, 마지막에 작성·확인
+    ├── 자가평가.md               # 파일 존재·미완료, PPT 작성 후 작성·확인
     ├── 영상/
-    │   ├── demo.mov
-    │   └── p09.mov
+    │   ├── demo.mp4             # 제출용 60초 편집본
+    │   ├── p09.mp4              # 원칙 클립 10초
+    │   ├── demo.mov             # 기존 시연 원본
+    │   └── p09.mov              # 오류·복구 원본
     └── screenshots/
         ├── 01_v1_current.png    # IKEA 참고 화면·AI 개인정보 가림 처리
         ├── 02_v2_a.png          # 한 열 목록
         ├── 03_v2_b.png          # 상세
         ├── 04_v2_c.png          # 고정 추천 예시
         ├── 05_v2_wide.png       # 넓은 화면 격자
+        ├── 06_loading.png       # DEMO_STATE loading의 3초 지연
+        ├── 07_error.png         # 실제 서버 연결 실패
+        ├── 08_empty.png         # DEMO_STATE empty의 빈 목록
         ├── test-pass.png        # 위젯 테스트 결과 캡처
         └── analyze-pass.png     # 직접 실행한 Dart 분석 결과 캡처
 ```
@@ -278,7 +289,7 @@ git log --oneline --grep="p09"
 
 ## 5. 기획 기준점과 Git 기록
 
-2026-10-26에 로그인하지 않은 클라우드 브라우저에서 [공개 GitHub 저장소](https://github.com/jialin0717/jachwifit-midterm)를 확인했다. 확인 시점의 기본 브랜치는 `main`, 커밋은 [`c9e4745`](https://github.com/jialin0717/jachwifit-midterm/commit/c9e47452c0c6dcf202bacefd580321423c9711ae)이며, 커밋 1개·태그 0개였다. 기획 확정 태그 `v1-plan`은 없다. 따라서 현재 공개 기록만으로 기획 확정 이후의 단계별 변경 이력을 제시하지 않는다.
+2026-10-26에 로그인하지 않은 클라우드 브라우저에서 [공개 GitHub 저장소](https://github.com/jialin0717/jachwifit-midterm)를 확인했다. 확인 시점의 기본 브랜치는 `main`이며, 커밋 3개·태그 0개였다. 최초 업로드 `c9e4745`, README 정리 `12b29b1`, 목업 서버 의존성 수정 `3e05cd8`을 확인했다. 최신 확인 커밋은 [`3e05cd8`](https://github.com/jialin0717/jachwifit-midterm/commit/3e05cd8ef39f9f1b177d9941a6f4650d5ce19ca8)이다. 기획 확정 태그 `v1-plan`은 없다. 따라서 현재 공개 기록만으로 기획 확정 이후의 단계별 변경 이력을 제시하지 않는다.
 
 아래 명령은 제출할 저장소에서 기록을 다시 확인할 때 사용한다.
 
@@ -300,17 +311,22 @@ git diff v1-plan..HEAD --stat
 
 | 파일 | 길이 | 담긴 내용 |
 |---|---|---|
-| [demo.mov](docs/영상/demo.mov) | 약 45.97초 | 목록, 상품 4개의 상세, 추천 예시, 관심 상품 체험, 사용 안내, 상품 4의 빈 안내, 넓은 화면에서 좁은 화면으로 전환 |
-| [p09.mov](docs/영상/p09.mov) | 약 19.69초 | 약 8–9초 오류 안내 → 10–16초 서버 재시작 → 17초 다시 시도 → 18–19초 목록 복구 |
+| [demo.mp4 — 제출용](docs/영상/demo.mp4) | 60초 | 목록·상세·탭·모달·관심 상품 안내·상품 4의 빈 안내·반응형 전환에 이어 오류와 재시도 복구 |
+| [p09.mp4 — 원칙 클립](docs/영상/p09.mp4) | 10초 | 오류 안내 → 서버 재시작 → 다시 시도 → 목록 복구 |
+| [demo.mov — 원본](docs/영상/demo.mov) | 약 45.97초 | 기존 전체 UI 시연 |
+| [p09.mov — 원본](docs/영상/p09.mov) | 약 19.69초 | 기존 오류·복구 시연 |
 
-현재 파일은 MOV 형식이다. 전체 데모는 약 46초로, 과제에서 정확히 1분을 요구하는지 제출 안내와 대조한다. 원칙별 권장 5–10초보다 긴 P09 영상은 오류 복구 과정을 포함한 원본이다.
+MP4는 기존 촬영본을 편집·변환한 파일이다. `demo.mp4`는 원본 `demo.mov`의 0–45.970초, 원본 `p09.mov`의 4–14초와 15.661667–19.691667초를 순서대로 연결했다. `p09.mp4`는 원본 `p09.mov`의 8.5–18.5초 구간이다. 대기 구간을 줄였으며 새 화면이나 동작을 만들어 넣지 않았다. 서버를 종료하는 조작 자체가 촬영되었다고 설명하지 않는다.
 
-2026-10-26에 두 영상의 GitHub 파일 페이지가 열리는 것을 확인했다. 파일 크기는 `demo.mov` 약 17.5MB, `p09.mov` 약 4.85MB다. **두 파일 모두 GitHub에서 미리 볼 수 없다는 안내와 `View raw`가 표시된다. 아래 다운로드 링크 또는 파일 페이지의 `View raw`를 눌러 파일을 저장한 뒤, MOV를 지원하는 동영상 플레이어로 열어 본다.**
+제출용 60초 영상에서 오류 안내는 약 49.97초, 서버 재시작은 약 53.97초, 다시 시도는 약 57.31초, 목록 복구는 약 58.31초에 나타난다. **원칙 카드에 적힌 기존 시간은 원본 MOV 기준이며, MP4의 시간과 같지 않다.**
 
-- [전체 데모 다운로드 — demo.mov](https://github.com/jialin0717/jachwifit-midterm/raw/refs/heads/main/docs/%EC%98%81%EC%83%81/demo.mov)
-- [오류·재시도 영상 다운로드 — p09.mov](https://github.com/jialin0717/jachwifit-midterm/raw/refs/heads/main/docs/%EC%98%81%EC%83%81/p09.mov)
+두 MP4는 H.264/AAC, yuv420p, 30fps, faststart로 제작했으며 전체 디코딩과 주요 장면을 확인했다. `demo.mp4`는 1,800프레임·60초, `p09.mp4`는 10초다. 파일을 저장소에 반영한 뒤 공개 링크에서도 다운로드·재생을 확인한다.
 
-이번 공개 저장소 확인은 파일 페이지와 링크 확인까지이며, GitHub에서 다운로드한 파일의 재생을 확인했다는 뜻은 아니다. 위 시연 내용과 길이는 기존 로컬 영상 확인 기록을 기준으로 한다.
+기존 MOV 2개는 공개 GitHub 파일 페이지에서 파일 존재를 확인했으나 미리보기가 지원되지 않았다. 원본이 필요하면 아래 링크 또는 파일 페이지의 `View raw`로 내려받는다.
+
+- [전체 시연 원본 다운로드](https://github.com/jialin0717/jachwifit-midterm/raw/refs/heads/main/docs/%EC%98%81%EC%83%81/demo.mov)
+- [오류·복구 원본 다운로드](https://github.com/jialin0717/jachwifit-midterm/raw/refs/heads/main/docs/%EC%98%81%EC%83%81/p09.mov)
+
 
 ## 7. 구현 범위 점검
 
@@ -328,7 +344,7 @@ grep -rnE "http\.(post|put|patch|delete)|SharedPreferences|sqflite|hive|Firebase
 
 ## 8. 제출 전 새 clone 실행 확인
 
-아래 절차는 **아직 완료하지 않은 제출 전 점검**이다. 현재 공개 저장소 주소를 사용한다.
+2026-10-26에 README 정리 커밋 `12b29b1`을 별도 폴더 `jachwifit-clone-check`로 clone하여 아래 항목을 점검했다. clone과 원본에서 목업 서버 의존성을 수정했고, 원본의 변경은 `3e05cd8`로 공개 저장소에 반영했다. 학생이 서버 재시작 뒤 새로고침 없이 **다시 시도**를 눌러 목록이 복구되었다고 보고했다. 다음 명령은 재현용 예시이며 폴더명은 달라도 된다.
 
 ```bash
 git clone https://github.com/jialin0717/jachwifit-midterm.git clone-test
@@ -352,29 +368,34 @@ flutter pub get
 flutter run -d chrome
 ```
 
-확인 항목:
+확인 결과:
 
-- [ ] `/items`, `/notes?itemId=1`, `/images/slim-shelf.png`가 열린다.
-- [ ] 상품 4개와 이미지 4장이 표시된다.
-- [ ] 목록 → 상세 → 탭 → 추천 모달 → 닫기·뒤로 가기가 동작한다.
-- [ ] 관심 상품 체험은 안내만 표시하고 저장하지 않는다.
-- [ ] 상품 4의 사용 안내 탭에 빈 상태가 표시된다.
-- [ ] 로딩·오류·빈 상태 및 오류 후 다시 시도를 확인한다.
-- [ ] 창 너비를 바꾸면 목록과 격자가 전환되고 글자가 잘리지 않는다.
-- [ ] README의 영상·문서 링크가 새 clone에서도 열린다.
-- [ ] 새 clone에서 정적 분석과 위젯 테스트를 다시 실행해 결과를 기록한다. 로컬에서 확인한 명령·결과 및 `flutter analyze` 우회 방법은 10절을 따른다.
+- [x] `flutter pub get` 성공.
+- [x] 목업 서버 3000번 포트와 새 clone의 Chrome 앱 실행.
+- [x] 상품 4개·이미지 4장·첫 상품 사용 안내 표시 확인.
+- [x] 추천 모달 열기·닫기, 관심 상품 안내, 뒤로 가기, 상품 4의 빈 안내, 좁은 화면은 학생이 정상 동작을 보고.
+- [x] 새 clone의 위젯 테스트 7개 통과 및 직접 Dart 분석 `No issues found!` 확인.
+- [x] 새 clone의 오류 화면 확인 및 학생의 서버 재시작 → 다시 시도 → 목록 복구 성공 보고.
+- [ ] 새 제출용 MP4와 추가 상태 캡처를 push한 뒤 공개 링크 확인.
+
+위젯 테스트의 로딩·오류·빈 상태 검증과 실제 서버를 사용하는 수동 점검은 구분한다. API 주소를 각각 브라우저에서 직접 연 결과나 모든 창 크기·글자 크기의 검증으로 확대하지 않는다.
 
 ## 9. 제출물 체크
 
 템플릿 안내 기준 제출 시각은 **10/29(목) 15:00 전**, 발표는 **6분 발표 + 2분 질의**다. 최종 공지와 대조한다.
 
 - [ ] ① 데모 시연 + 코드: GitHub 저장소 URL 제출
-  - [ ] Flutter 코드, `mock_server/db.json`, `mock_server/public/images/` 포함
-  - [ ] README 앱 소개 8칸, 실행 방법, 데모 링크 확인
+  - [x] Flutter 코드, `mock_server/db.json`, `mock_server/public/images/` 포함
+  - [x] README 앱 소개 8칸, 실행 방법, 데모 파일·다운로드 링크 확인
   - [x] v1 앱 UI 기반 개인정보 가림 처리 참고 이미지 1개와 v2 스크린샷 4개 배치
   - [x] 기획·설계·AI 사용·자가평가 문서 9개의 업로드 확인
-  - [ ] 업로드된 문서 최종 검토 및 자가평가 마지막 작성·확인
-  - [ ] 새 clone 실행 확인 및 Git 기록 점검
+  - [ ] 업로드된 문서 최종 검토 및 PPT 이후 자가평가 작성·확인
+  - [x] 새 clone의 주요 화면·테스트·분석·오류 복구 및 공개 Git 기록 확인
+  - [x] 로딩·오류·빈 상태 화면 캡처 확인
+  - [x] 로딩·오류·빈 상태 캡처 3개를 원본 프로젝트의 `docs/screenshots/`에 저장
+  - [ ] 추가 상태 캡처 push 및 템플릿의 별점 분포 자료 배치
+  - [x] 60초 데모와 10초 원칙 클립 제작·파일 검증
+  - [ ] 새 MP4 및 추가 상태 캡처 push·공개 링크 확인
 - [ ] ② 발표자료: 지정 템플릿을 사용한 PPTX 또는 PDF
   - [ ] 본문 7장
   - [ ] B1 데모·스크린샷 / B2 원칙 카드 / B3 prompt-log / B4 자가평가
@@ -419,12 +440,17 @@ dart analyze --fatal-infos
 
 ![Dart 정적 분석 No issues found 결과](docs/screenshots/analyze-pass.png)
 
+### 새 clone과 목업 서버 의존성 — 2026-10-26
+
+별도 clone에서 패키지 설치, 위젯 테스트 7개 통과, 직접 Dart 분석 통과를 다시 확인했다. Chrome에서 상품·이미지·사용 안내가 표시되었으며, 학생은 모달·관심 상품 안내·뒤로 가기·상품 4의 빈 안내·좁은 화면이 정상이라고 보고했다. 새 clone의 오류 화면도 확인했고, 학생은 서버 재시작 뒤 새로고침 없이 다시 시도를 눌러 목록이 복구되었다고 보고했다.
+
+`npm install`에서 발견된 `body-parser 1.20.8`의 [보안 권고 GHSA-27r3-jxmh-p828](https://github.com/advisories/GHSA-27r3-jxmh-p828)에 대해, clone과 원본에서 `npm audit fix`를 강제 옵션 없이 실행했다. `package-lock.json`만 변경되었고 `json-server 0.17.4`는 유지되었다. 확인한 버전은 `body-parser 1.20.9`, `express 4.22.3`이며, 당시 `npm audit` 결과는 취약점 0개였다. 이는 해당 시점의 의존성 검사 결과이며 모든 보안 위험이 없다는 뜻은 아니다. 원본 변경은 `3e05cd8`로 push하여 공개 저장소에서 확인했다.
+
 ### 문서와 남은 제출 작업
 
-- `docs/prompt-log.md`는 최신 기록 16개를 반영한 저장본까지 확인했다.
-- 2026-10-26 공개 README에서 앱 UI 이미지 5개와 테스트·분석 결과 이미지 2개, 총 7개가 표시됨을 확인했다. v1 참고 이미지는 AI 개인정보 가림 처리본이며 원본은 별도로 보관했다.
-- 공개 저장소의 `main` 브랜치, 커밋 1개·태그 0개와 문서 9개 업로드를 확인했다. `v1-plan` 태그는 없으며 과거 기획 확정 기록을 새로 만들어 제시하지 않는다.
-- 상품 이미지 PNG 4장은 기존 로컬 확인 기록이 있다. 데모 MOV 2개는 공개 GitHub 파일 페이지를 확인했지만 미리보기가 지원되지 않아 다운로드 안내를 제공한다. 다운로드 후 재생은 이번 확인 범위에 포함하지 않는다.
-- 새 clone 실행 확인, 발표자료, LMS 제출은 아직 완료하지 않았다. `docs/자가평가.md`는 업로드되어 있지만 미완료이며, 나머지 작업 후 마지막에 작성·확인한다.
+- 공개 README의 이미지 7개와 문서 9개 업로드를 확인했다. 추가 상태 캡처 3개는 원본 프로젝트의 `docs/screenshots/`에 저장했으며 아직 push 전이다. 자가평가는 파일만 있으며 미완료다.
+- `main`의 커밋 3개·태그 0개를 확인했다. 과거 기획 기준점 `v1-plan`은 없다.
+- 60초 데모·10초 원칙 클립 MP4의 제작과 파일 검증을 마쳤다. 새 MP4와 추가 상태 캡처를 push한 뒤 공개 링크를 확인한다. 기존 MOV 원본은 유지한다.
+- 프로젝트 수정·최종 확인을 마친 뒤 PPT, 자가평가, 발표 원고 순서로 작성한다. LMS 제출은 아직 완료하지 않았다.
 
 위 결과는 확인한 범위의 기록이며, 전체 제출 준비가 완료되었다는 뜻은 아니다.
